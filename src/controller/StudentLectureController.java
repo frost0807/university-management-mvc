@@ -70,8 +70,7 @@ public class StudentLectureController {
 	public StudentLectureDTO selectOneByTwoId(int studentId, int lectureId) {
 
 		StudentLectureDTO s=null;
-		
-		String query="SELECT * FROM `lecture` WHERE `student_id`=? AND `lecture_id`=?";
+		String query="SELECT * FROM `student_lecture` WHERE `student_id`=? AND `lecture_id`=?";
 		
 		try {
 			PreparedStatement pstmt=conn.prepareStatement(query);
@@ -83,13 +82,12 @@ public class StudentLectureController {
 				s=new StudentLectureDTO();
 				
 				s.setId(rs.getInt("id"));
-				s.setId(rs.getInt("student_id"));
-				s.setId(rs.getInt("lecture_id"));
+				s.setStudentId(rs.getInt("student_id"));
+				s.setLectureId(rs.getInt("lecture_id"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
 		return s;
 	}
 	
@@ -102,7 +100,7 @@ public class StudentLectureController {
 			pstmt.setInt(1, s.getStudentId());
 			pstmt.setInt(2, s.getLectureId());
 			
-			pstmt.executeQuery();
+			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

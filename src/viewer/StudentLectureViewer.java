@@ -29,15 +29,18 @@ public class StudentLectureViewer {
 	
 	public void printMyAppliedList() {
 		StudentLectureController sLectureController=new StudentLectureController(connector);
+		TimeController timeController=new TimeController(connector);
 		
-		System.out.println("내가 신청한 과목들");
-		System.out.println("강의코드\t강의명\t\t요일\t시작시간\t마치는시간\n");
+		System.out.println("내가 신청한 과목들\n");
+		System.out.println("수강신청코드\t강의명\t\t요일\t시작시간\t마치는시간\n");
+		System.out.println("----------------------------------------------------------------------------");
 		for(StudentLectureDTO s:sLectureController.selectAllByStudentId(logInInfo.getId())) {
 			LectureController lectureController=new LectureController(connector);
 			
 			LectureDTO l=lectureController.selectOne(s.getLectureId());
 			System.out.printf("%d\t%s\t\t%s\t%s\t%s\n",l.getId(),l.getLectureName(),
-					l.getDay(),l.getStartTime(),l.getEndTime());
+					l.getDay(),timeController.timeString(l.getStartTime()),
+					timeController.timeString(l.getEndTime()));
 		}
 	}
 
@@ -101,7 +104,7 @@ public class StudentLectureViewer {
 			String[] myDay=myLecture.getDay().split(",");
 			
 			for(int i=0;i<tempDay.length;i++) {
-				if(Arrays.binarySearch(tempDay, myDay[i])>0) {
+				if(Arrays.binarySearch(myDay, tempDay[i])>0) {
 					if(tempLecture.getStartTime()<myLecture.getEndTime()
 							&&tempLecture.getEndTime()>myLecture.getStartTime()) {
 						result=false;
@@ -149,7 +152,7 @@ public class StudentLectureViewer {
 		//신청하려는 강의의 학년을 담은 배열
 		String[] tempYear=tempLecture.getYear().split(",");
 		
-		if(Arrays.binarySearch(tempYear, logInInfo.getYear())<0) {
+		if(Arrays.binarySearch(tempYear, String.valueOf(logInInfo.getYear()))<0) {
 			result=false;
 		}
 		
@@ -171,7 +174,11 @@ public class StudentLectureViewer {
 			deleteChoice=ScUtil.nextInt(scanner, "삭제할 강의코드를 입력하시거나 0을 입력해 뒤로가기");
 		}
 		if(deleteChoice!=0) {
+			LectureDTO tempLecture=lectureController.selectOne(deleteChoice);
 			sLectureController.delete(logInInfo.getId(), deleteChoice);
+			
+			tempLecture.setSeatLeft(tempLecture.getSeatLeft()-1);
+			lectureController.update(tempLecture);
 			System.out.println("삭제가 완료되었습니다.");
 		}
 	}
@@ -213,19 +220,19 @@ public class StudentLectureViewer {
 		}
 
 		System.out.println("============================================================================");
-		System.out.print("[월요일]");
+		System.out.print("[월요일]\n");
 		printTimeTableByDay(mon);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[화요일]");
+		System.out.print("[화요일]\n");
 		printTimeTableByDay(tue);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[수요일]");
+		System.out.print("[수요일]\n");
 		printTimeTableByDay(wed);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[목요일]");
+		System.out.print("[목요일]\n");
 		printTimeTableByDay(thu);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[금요일]");
+		System.out.print("[금요일]\n");
 		printTimeTableByDay(fri);
 		System.out.println("============================================================================");
 	}
@@ -258,6 +265,7 @@ public class StudentLectureViewer {
 		UserDTO tempUser=userController.selectOne(studentChoice);
 		//학생의 수강정보DTO
 		StudentLectureDTO tempsLecture=sLectureController.selectOneByTwoId(studentChoice, lectureId);
+		
 		//1.존재하는 학생 코드인지 2.해당강의를 듣는 학생인지 
 		while(studentChoice!=0&&(tempUser==null||tempsLecture==null)) {
 			System.out.println("잘못된 입력입니다.");
@@ -266,7 +274,7 @@ public class StudentLectureViewer {
 			tempsLecture=sLectureController.selectOneByTwoId(studentChoice, lectureId);
 		}
 		if(studentChoice!=0) {
-			Double tempScore=gradeStringToDouble(ScUtil.nextLine(scanner,
+			double tempScore=gradeStringToDouble(ScUtil.nextLine(scanner,
 					"학점을 입력해주세요 A+, A0, B+, B0, C+, C0, D+, D0, F\nQ를 입력하면 뒤로가기\n"));
 			//조건에 맞지않는 값을 입력해 switch문의 default작동
 			//실수형 변수의 미세한 오차를 고려해 조건식 값 넉넉하게 선택
@@ -280,6 +288,7 @@ public class StudentLectureViewer {
 				tempsLecture.setScore(tempScore);
 				sLectureController.update(tempsLecture);
 				System.out.println("점수가 갱신되었습니다.");
+				
 			}
 		}
 	}
@@ -290,12 +299,12 @@ public class StudentLectureViewer {
 		UserController userController=new UserController(connector);
 		//해당 강의의 수강정보들을 가져와 학생 리스트 출력
 		System.out.println("============================================================================");
-		System.out.printf("학생코드\t이름\t학년\t전공\n");
+		System.out.printf("학생코드\t이름\t학년\t전공\t학점\n");
 		System.out.println("----------------------------------------------------------------------------");
 		for(StudentLectureDTO s:sLecturecontroller.selectAllByLectureId(lectureId)) {
 			UserDTO temp=userController.selectOne(s.getStudentId());
-			System.out.printf("%d\t%s\t%d\t%s\n",s.getStudentId(),temp.getName(),
-					temp.getYear(),majorController.majorString(temp.getMajor()));
+			System.out.printf("%d\t%s\t%d\t%s\t%.1f\n",s.getStudentId(),temp.getName(),
+					temp.getYear(),majorController.majorString(temp.getMajor()),s.getScore());
 		}
 		System.out.println("============================================================================");
 	}
@@ -347,11 +356,20 @@ public class StudentLectureViewer {
 		while(studentChoice!=0&&tempUser==null) {
 			System.out.println("존재하지 않는 학생코드입니다.");
 			studentChoice=ScUtil.nextInt(scanner, "추가수강신청 받을 학생의 코드를 입력해주시거나 0을 입력해 뒤로가기");
+			tempUser=userController.selectOne(studentChoice);
+			tempLecture=lectureController.selectOne(lectureChoice);
+			tempsLecture=sLectureController.selectOneByTwoId(studentChoice, lectureChoice);
 		}
 		if(studentChoice!=0) {
 			//1.학생의 시간표가 겹치지 않는지 2.잔여학점이 충분한지 3.이미 등록한 강의는 아닌지
 			if(tempsLecture==null&&tempUser.getCreditLeft()>=tempLecture.getCredit()
-					&&validTime(tempUser,lectureChoice)==false) {
+					&&validTime(tempUser,lectureChoice)==true) {
+				//새로운 수강정보 생성 후 insert
+				tempsLecture=new StudentLectureDTO();
+				tempsLecture.setStudentId(studentChoice);
+				tempsLecture.setLectureId(lectureChoice);
+				sLectureController.insert(tempsLecture);
+				//잔여좌석 -1한 후 update
 				tempLecture.setSeatLeft(tempLecture.getSeatLeft()-1);
 				lectureController.update(tempLecture);
 				System.out.println("추가수강신청 등록이 완료되었습니다.");
@@ -361,7 +379,10 @@ public class StudentLectureViewer {
 				System.out.println("신청하려는 강의의 학점이 잔여학점을 초과합니다.");
 			} else if(validTime(tempUser,lectureChoice)==false) {
 				System.out.println("시간표가 중복입니다.");
+			} else {
+				System.out.println("비정상적인 값입니다.");
 			}
 		}
+		
 	}
 }

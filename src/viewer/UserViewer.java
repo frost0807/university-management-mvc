@@ -49,7 +49,7 @@ public class UserViewer {
 
 	private void studentMenu() {
 		while(logInInfo!=null) {
-			int userChoice=ScUtil.nextInt(scanner, 1, 5, "1.수강신청 2.시간표보기 3.내 성적보기 4.계정정보 수정 5.로그아웃");
+			int userChoice=ScUtil.nextInt(scanner, 1, 5, "1.수강신청 2.시간표보기 3.내 성적보기 4.비밀번호 수정 5.로그아웃");
 			
 			if(userChoice==1) {
 				LectureViewer viewer=new LectureViewer(scanner,connector,logInInfo);
@@ -73,7 +73,7 @@ public class UserViewer {
 	
 	private void lecturerMenu() {
 		while(logInInfo!=null) {
-			int userChoice=ScUtil.nextInt(scanner, 0, 0, "1.내 강의 보기 2.강의시간표 보기 3.계정정보 수정 4.로그아웃");
+			int userChoice=ScUtil.nextInt(scanner, 1, 4, "1.내 강의 보기 2.강의시간표 보기 3.비밀번호 수정 4.로그아웃");
 			
 			if(userChoice==1) {
 				LectureViewer viewer=new LectureViewer(scanner,connector,logInInfo);
@@ -118,7 +118,66 @@ public class UserViewer {
 	}
 
 	private void printUserList() {
+		UserController controller=new UserController(connector);
+		System.out.println("============================================================================");
+		System.out.println("유저코드\t등급\t이름\t학년\t전공코드\t잔여학점\n");
+		System.out.println("----------------------------------------------------------------------------");
+		for(UserDTO u:controller.selectAll()) {
+			System.out.printf("%d\t%d\t%s\t%d\t%d\t%d\n",u.getId(),u.getRank(),u.getName(),u.getYear(),u.getMajor(),u.getCreditLeft());
+		}
 		
+		int userChoice=ScUtil.nextInt(scanner, "삭제하거나 수정할 유저코드를 입력해주시거나 0을 입력해 뒤로가기");
+		while(userChoice!=0&&controller.selectOne(userChoice)==null) {
+			System.out.println("잘못된 입력입니다.");
+			userChoice=ScUtil.nextInt(scanner, "삭제하거나 수정할 유저코드를 입력해주시거나 0을 입력해 뒤로가기");
+		}
+		if(userChoice!=0) {
+			int editChoice=ScUtil.nextInt(scanner, 1, 3, "1.삭제하기 2.수정하기 3.뒤로가기");
+			if(editChoice==1) {
+				deleteUser(userChoice);
+			} else if(editChoice==2) {
+				updateUser(userChoice);
+			}
+		}
+	}
+
+	private void deleteUser(int userId) {
+		String yOrN=ScUtil.nextLine(scanner, "정말로 삭제하시겠습니까? Y/N");
+		
+		if(yOrN.equalsIgnoreCase("y")) {
+			UserController controller=new UserController(connector);
+			controller.delete(userId);
+			
+			System.out.println("삭제가 완료되었습니다.");
+			printUserList();
+		}
+	}
+	
+	private void updateUser(int userId) {
+		UserController userController=new UserController(connector);
+		MajorController majorController=new MajorController(connector);
+		UserDTO tempUser=userController.selectOne(userId);
+
+		tempUser.setName(ScUtil.nextLine(scanner, "새로운 이름을 입력해주세요"));
+		tempUser.setRank(ScUtil.nextInt(scanner, 1, 3, "새로운 등급을 입력해주세요"));
+		if(tempUser.getRank()==1) {
+			tempUser.setYear(ScUtil.nextInt(scanner, 1, 4, "새로운 학년을 입력해주세요"));
+			tempUser.setCreditLeft(ScUtil.nextInt(scanner, 1, 30, "최대 신청가능 학점을 입력해주세요"));
+			
+			int tempMajor=ScUtil.nextInt(scanner, "새로운 전공코드를 입력해주시거나 0을 입력해 뒤로가기");
+			while(tempMajor!=0&&majorController.majorString(tempMajor)==null) {
+				System.out.println("잘못된 입력입니다.");
+				tempMajor=ScUtil.nextInt(scanner, "새로운 전공코드를 입력해주시거나 0을 입력해 뒤로가기");
+			}
+			if(tempMajor!=0) {
+				tempUser.setMajor(tempMajor);
+				
+				userController.updateByAdmin(tempUser);
+				System.out.println("회원정보 수정이 완료되었습니다.");
+				printUserList();
+			}
+		}
+		userManagement();
 	}
 
 	private void insertUser() {
@@ -145,7 +204,13 @@ public class UserViewer {
 				tempUser.setMajor(majorChoice);
 				
 				userController.insert(tempUser);
+				System.out.println("사용자 등록이 완료되었습니다.");
 			}
+		} else {
+			UserController userController=new UserController(connector);
+			
+			userController.insert(tempUser);
+			System.out.println("사용자등록이 완료되었습니다.");
 		}
 	}
 

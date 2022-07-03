@@ -86,6 +86,7 @@ public class UserController {
 				u.setRank(rs.getInt("rank"));
 				u.setYear(rs.getInt("year"));
 				u.setCreditLeft(rs.getInt("credit_left"));
+				u.setMajor(rs.getInt("major"));
 				
 				list.add(u);
 			}
@@ -128,7 +129,7 @@ public class UserController {
 		String query="INSERT INTO `user` (`password`,`rank`,`name`,`year`,`major`,`credit_left`) VALUES(?,?,?,?,?,?)";
 		try {
 			PreparedStatement pstmt=conn.prepareStatement(query);
-			pstmt.setString(1, u.getPassword());
+			pstmt.setString(1, convertToSha(u.getPassword()));
 			pstmt.setInt(2, u.getRank());
 			pstmt.setString(3, u.getName());
 			pstmt.setInt(4, u.getYear());
@@ -146,7 +147,7 @@ public class UserController {
 		
 		try {
 			PreparedStatement pstmt=conn.prepareStatement(query);
-			pstmt.setString(1, convertToSha(logInInfo.getPassword()));
+			pstmt.setString(1, logInInfo.getPassword());
 			pstmt.setInt(2, logInInfo.getId());
 			
 			pstmt.executeUpdate();
@@ -156,15 +157,14 @@ public class UserController {
 	}
 	
 	public void updateByAdmin(UserDTO u) {
-		String query="UPDATE `user` SET `password`=?,`name`=?,`year`=?,`major`=?,`credit_left`=? WHERE `id`=?";
+		String query="UPDATE `user` SET `name`=?,`year`=?,`major`=?,`credit_left`=? WHERE `id`=?";
 		try {
 			PreparedStatement pstmt=conn.prepareStatement(query);
-			pstmt.setString(1, u.getPassword());
-			pstmt.setString(2, u.getName());
-			pstmt.setInt(3, u.getYear());
-			pstmt.setInt(4, u.getMajor());
-			pstmt.setInt(5, u.getCreditLeft());
-			pstmt.setInt(6, u.getId());
+			pstmt.setString(1, u.getName());
+			pstmt.setInt(2, u.getYear());
+			pstmt.setInt(3, u.getMajor());
+			pstmt.setInt(4, u.getCreditLeft());
+			pstmt.setInt(5, u.getId());
 			
 			pstmt.executeUpdate();
 		} catch (Exception e) {

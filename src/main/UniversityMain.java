@@ -16,5 +16,4 @@ public class UniversityMain {
 		
 		scanner.close();
 	}
-
 }

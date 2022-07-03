@@ -55,10 +55,10 @@ public class LectureViewer {
 		StudentLectureViewer viewer=new StudentLectureViewer(scanner,connector,logInInfo);
 
 		System.out.println("============================================================================");
-		System.out.println("강의코드\t강의명\t\t\t전공\t\t학기\t학점\t신청가능인원수\n");
+		System.out.println("강의코드\t강의명\t\t전공\t학기\t학점\t신청가능인원수\n");
 		System.out.println("----------------------------------------------------------------------------");
 		for(LectureDTO l:lectureController.selectAll()) {
-			System.out.printf("%d\t%s\t\t\t%s\t\t%d\t%d\t%d\n",l.getId(),l.getLectureName(),
+			System.out.printf("%d\t%s\t\t%s\t%d\t%d\t%d\n",l.getId(),l.getLectureName(),
 					majorController.majorString(l.getMajor()),l.getSemester(),l.getCredit(),l.getSeatLeft());
 		}
 		System.out.println("============================================================================");
@@ -67,12 +67,12 @@ public class LectureViewer {
 	}
 
 	private int printLectureDetails() {
-		int lectureChoice=ScUtil.nextInt(scanner, "상세보기 할 강의의 코드를 입력해주시거나 0을입력해 뒤로가기");
+		int lectureChoice=ScUtil.nextInt(scanner, "상세보기 할 강의코드를 입력해주시거나 0을입력해 뒤로가기");
 		LectureController controller=new LectureController(connector);
 		
 		while(lectureChoice!=0&&controller.selectOne(lectureChoice)==null) {
 			System.out.println("잘못된 입력입니다.");
-			lectureChoice=ScUtil.nextInt(scanner, "상세보기 할 강의의 코드를 입력해주시거나 0을입력해 뒤로가기");
+			lectureChoice=ScUtil.nextInt(scanner, "상세보기 할 강의코드를 입력해주시거나 0을입력해 뒤로가기");
 		}
 		if(lectureChoice!=0) {
 			printOne(lectureChoice);
@@ -182,19 +182,19 @@ public class LectureViewer {
 		}
 
 		System.out.println("============================================================================");
-		System.out.print("[월요일]");
+		System.out.print("[월요일]\n");
 		printTimeTableByDay(mon);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[화요일]");
+		System.out.print("[화요일]\n");
 		printTimeTableByDay(tue);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[수요일]");
+		System.out.print("[수요일]\n");
 		printTimeTableByDay(wed);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[목요일]");
+		System.out.print("[목요일]\n");
 		printTimeTableByDay(thu);
 		System.out.println("----------------------------------------------------------------------------");
-		System.out.print("[금요일]");
+		System.out.print("[금요일]\n");
 		printTimeTableByDay(fri);
 		System.out.println("============================================================================");
 	}
@@ -285,26 +285,28 @@ public class LectureViewer {
 		MajorController majorController=new MajorController(connector);
 
 		System.out.println("============================================================================");
-		System.out.println("강의코드\t강의명\t\t\t전공\t강의실\t강사명\n");
+		System.out.println("강의코드\t강의명\t\t전공\t\t강의실\t\t강사명\n");
 		System.out.println("----------------------------------------------------------------------------");
 		for(LectureDTO l:lectureController.selectAll()) {
 			String tempMajor=majorController.majorString(l.getMajor());
 			String tempRoom=roomController.roomString(l.getRoom());
 			String tempLecturer=userController.selectOne(l.getLecturerId()).getName();
 			
-			System.out.printf("%d\t%s\t\t\t%s\t%s\t%s",l.getId(),l.getLectureName(),
+			System.out.printf("%d\t%8s\t%8s\t%s\t\t%s\n",l.getId(),l.getLectureName(),
 					tempMajor,tempRoom,tempLecturer);
 		}
 		System.out.println("============================================================================");
 		int lectureChoice=printLectureDetails();
 		
-		int userChoice=ScUtil.nextInt(scanner, 1, 3, "1.해당강의 삭제하기 2.해당강의 수정하기 3.뒤로가기");
-		if(userChoice==1) {
-			deleteLecture(lectureChoice);
-		} else if(userChoice==2) {
-			updateLecture(lectureChoice);
-		} else if(userChoice==3) {
-			printListByStaff();
+		if(lectureChoice!=0) {
+			int userChoice=ScUtil.nextInt(scanner, 1, 3, "1.해당강의 삭제하기 2.해당강의 수정하기 3.뒤로가기");
+			if(userChoice==1) {
+				deleteLecture(lectureChoice);
+			} else if(userChoice==2) {
+				updateLecture(lectureChoice);
+			} else if(userChoice==3) {
+				printListByStaff();
+			}
 		}
 	}
 
@@ -362,6 +364,7 @@ public class LectureViewer {
 					lectureController.update(tempLecture);
 					
 					System.out.println("강의정보 수정이 완료되었습니다.");
+					printOne(lectureChoice);
 				}
 			}
 		}
@@ -371,11 +374,9 @@ public class LectureViewer {
 		String yOrN=ScUtil.nextLine(scanner, "정말로 삭제하시겠습니까? Y/N");
 		if(yOrN.equalsIgnoreCase("y")) {
 			LectureController controller=new LectureController(connector);
-			printListByStaff();
 			
 			controller.delete(lectureId);
 			System.out.println("삭제가 완료되었습니다.");
-			printOne(lectureId);
 		}
 	}
 }

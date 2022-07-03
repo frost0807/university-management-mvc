@@ -33,7 +33,7 @@ public class LectureController {
 				l.setLecturerId(rs.getInt("lecturer_id"));
 				l.setSemester(rs.getInt("semester"));
 				l.setMajor(rs.getInt("major"));
-				l.setLectureName(rs.getString("class_name"));
+				l.setLectureName(rs.getString("lecture_name"));
 				l.setSeatLeft(rs.getInt("seat_left"));
 				l.setStartTime(rs.getInt("start_time"));
 				l.setEndTime(rs.getInt("end_time"));
@@ -64,7 +64,7 @@ public class LectureController {
 				l.setLecturerId(rs.getInt("lecturer_id"));
 				l.setSemester(rs.getInt("semester"));
 				l.setMajor(rs.getInt("major"));
-				l.setLectureName(rs.getString("class_name"));
+				l.setLectureName(rs.getString("lecture_name"));
 				l.setSeatLeft(rs.getInt("seat_left"));
 				l.setStartTime(rs.getInt("start_time"));
 				l.setEndTime(rs.getInt("end_time"));
